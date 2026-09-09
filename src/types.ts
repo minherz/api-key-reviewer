@@ -98,8 +98,11 @@ export interface ParsedApiKey {
   serviceAccountEmail?: string;
 }
 
+export type AuthSource = 'oauth' | 'manual' | null;
+
 export interface AppState {
   user: GoogleUser | null;
+  authSource: AuthSource;
   projects: GcpProject[];
   keys: ParsedApiKey[];
   statusMessage: string;

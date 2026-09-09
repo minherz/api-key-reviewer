@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" width="100%" height="100%" style="background:#f8f9fa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <!-- TOOLBAR -->
+  <rect x="0" y="0" width="960" height="60" fill="#ffffff" stroke="#e0e0e0" stroke-width="1"/>
+  
+  <!-- Logo -->
+  <text x="24" y="37" font-size="20">🔑</text>
+  <text x="56" y="37" font-size="16" font-weight="600" fill="#202124">Google API Keys Finder</text>
+  
+  <!-- Search Button (Active/Enabled) -->
+  <rect x="250" y="14" width="150" height="32" rx="4" fill="#ffffff" stroke="#dadce0" stroke-width="1"/>
+  <text x="264" y="35" font-size="13" font-weight="500" fill="#1a73e8">🔍 Find All API Keys</text>
+  
+  <!-- Access Token Button -->
+  <rect x="670" y="14" width="120" height="32" rx="4" fill="#ffffff" stroke="#dadce0" stroke-width="1"/>
+  <text x="684" y="35" font-size="13" font-weight="500" fill="#3c4043">🔑 Access Token</text>
+  
+  <!-- User Profile Chip -->
+  <rect x="800" y="14" width="136" height="32" rx="16" fill="#f1f3f4" stroke="#dadce0" stroke-width="1"/>
+  <circle cx="816" cy="30" r="10" fill="#1a73e8"/>
+  <text x="813" y="34" font-size="10" fill="#ffffff">👤</text>
+  <text x="832" y="35" font-size="12" font-weight="500" fill="#202124">Jane Doe</text>
+  <text x="920" y="34" font-size="9" fill="#5f6368">▼</text>
+  
+  <!-- TABLE HEADER -->
+  <rect x="24" y="80" width="912" height="40" fill="#f1f3f4" rx="4"/>
+  <text x="40" y="105" font-size="12" font-weight="600" fill="#5f6368">Display Name</text>
+  <text x="200" y="105" font-size="12" font-weight="600" fill="#5f6368">Unique ID (UID)</text>
+  <text x="390" y="105" font-size="12" font-weight="600" fill="#5f6368">Project ID</text>
+  <text x="530" y="105" font-size="12" font-weight="600" fill="#5f6368">Restrictions</text>
+  <text x="650" y="105" font-size="12" font-weight="600" fill="#5f6368">Recommendations</text>
+  
+  <!-- LIST CONTAINER -->
+  <g>
+    <!-- ROW 1: NONE (UNRESTRICTED - RED) -->
+    <rect x="24" y="125" width="912" height="74" fill="#ffffff" stroke="#dadce0" stroke-width="1" rx="6"/>
+    <line x1="24" y1="125" x2="24" y2="199" stroke="#d93025" stroke-width="6"/>
+    
+    <text x="40" y="157" font-size="13" font-weight="600" fill="#1a73e8">Browser Maps Key</text>
+    <text x="40" y="177" font-size="11" fill="#70757a">Client-side web key</text>
+    
+    <text x="200" y="156" font-size="12" font-family="SFMono-Regular, monospace" fill="#3c4043">4a8f9b2d-11c3-4d6e-82a1</text>
+    <text x="200" y="175" font-size="11" fill="#70757a">Created Oct 12, 2025</text>
+    
+    <text x="390" y="162" font-size="12" font-weight="500" fill="#202124">my-web-frontend</text>
+    
+    <rect x="530" y="145" width="80" height="26" rx="13" fill="#fce8e6"/>
+    <text x="548" y="162" font-size="12" font-weight="600" fill="#c5221f">🚨 None</text>
+    
+    <text x="650" y="152" font-size="11" font-weight="600" fill="#c5221f">🚨 High Risk: Unrestricted Key</text>
+    <text x="650" y="168" font-size="11" fill="#5f6368">No application or API restrictions. Restrict HTTP referrers</text>
+    <text x="650" y="182" font-size="11" fill="#5f6368">and limit to Google Maps Platform APIs.</text>
+
+    <!-- ROW 2: SOME (PARTIALLY RESTRICTED - YELLOW/ORANGE) -->
+    <rect x="24" y="207" width="912" height="74" fill="#ffffff" stroke="#dadce0" stroke-width="1" rx="6"/>
+    <line x1="24" y1="207" x2="24" y2="281" stroke="#f29900" stroke-width="6"/>
+    
+    <text x="40" y="239" font-size="13" font-weight="600" fill="#1a73e8">Mobile Client Key</text>
+    <text x="40" y="259" font-size="11" fill="#70757a">Android release client</text>
+    
+    <text x="200" y="238" font-size="12" font-family="SFMono-Regular, monospace" fill="#3c4043">b27c3d19-55f2-4e9a-981b</text>
+    <text x="200" y="257" font-size="11" fill="#70757a">Created Jan 20, 2026</text>
+    
+    <text x="390" y="244" font-size="12" font-weight="500" fill="#202124">mobile-backend-prod</text>
+    
+    <rect x="530" y="227" width="80" height="26" rx="13" fill="#fef7e0"/>
+    <text x="548" y="244" font-size="12" font-weight="600" fill="#b06000">🔓 Some</text>
+    
+    <text x="650" y="234" font-size="11" font-weight="600" fill="#b06000">⚠️ Partial Risk: Missing API Restrictions</text>
+    <text x="650" y="250" font-size="11" fill="#5f6368">Restricted to Android apps (SHA-1 fingerprint), but API targets</text>
+    <text x="650" y="264" font-size="11" fill="#5f6368">are open to all services. Restrict API targets.</text>
+
+    <!-- ROW 3: LOCKED (RESTRICTED + SA BOUND - GREEN) -->
+    <rect x="24" y="289" width="912" height="74" fill="#ffffff" stroke="#dadce0" stroke-width="1" rx="6"/>
+    <line x1="24" y1="289" x2="24" y2="363" stroke="#188038" stroke-width="6"/>
+    
+    <text x="40" y="321" font-size="13" font-weight="600" fill="#1a73e8">Translate Service Key</text>
+    <text x="40" y="341" font-size="11" fill="#70757a">Internal batch processor</text>
+    
+    <text x="200" y="320" font-size="12" font-family="SFMono-Regular, monospace" fill="#3c4043">f91e82a0-384c-47bc-812d</text>
+    <text x="200" y="339" font-size="11" fill="#70757a">Created Feb 15, 2026</text>
+    
+    <text x="390" y="326" font-size="12" font-weight="500" fill="#202124">leoy-toolbox</text>
+    
+    <rect x="530" y="309" width="86" height="26" rx="13" fill="#e6f4ea"/>
+    <text x="546" y="326" font-size="12" font-weight="600" fill="#137333">🔐 Locked</text>
+    
+    <text x="650" y="316" font-size="11" font-weight="600" fill="#137333">✅ Well Restricted</text>
+    <text x="650" y="332" font-size="11" fill="#5f6368">Both IP restrictions and Cloud Translation API targets set.</text>
+    <text x="650" y="346" font-size="11" fill="#5f6368">Bound to service account: <tspan font-family="monospace">sa-backend@leoy-toolbox.iam...</tspan></text>
+  </g>
+  
+  <!-- FOOTER / STATUS BAR -->
+  <rect x="0" y="500" width="960" height="40" fill="#ffffff" stroke="#e0e0e0" stroke-width="1"/>
+  <text x="24" y="525" font-size="12" fill="#137333">Scan completed. Inspected 3 projects. Found 3 active keys (1 high risk, 1 partial risk, 1 locked).</text>
+  <text x="700" y="525" font-size="12" fill="#70757a">© 2026 API Keys Finder.</text>
+  <rect x="850" y="510" width="86" height="20" rx="10" fill="#e6f4ea"/>
+  <text x="893" y="524" font-size="11" font-weight="600" fill="#137333" text-anchor="middle">Read-Only</text>
+</svg>

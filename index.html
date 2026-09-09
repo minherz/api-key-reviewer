@@ -46,13 +46,16 @@
         </nav>
       </div>
       <div class="toolbar-right">
+        <button id="btn-show-access-token" class="btn btn-secondary" title="Use Google access token">
+          <span class="icon">🔑</span> Access Token
+        </button>
         <div id="user-profile" class="user-profile-container hidden">
           <button id="btn-profile-toggle" class="btn-profile-trigger" title="User Profile Menu">
             <span id="user-name" class="user-name">Guest</span>
             <img id="user-avatar" class="user-avatar" src="" alt="User Profile">
             <span class="dropdown-arrow">▼</span>
           </button>
-          
+
           <!-- Profile Dropdown Menu -->
           <div id="profile-dropdown" class="profile-dropdown-menu hidden">
             <div class="dropdown-user-info">
@@ -100,8 +103,11 @@
         <div id="empty-state" class="empty-state">
           <div class="empty-icon">🔓</div>
           <h2>Review Your Google Cloud API Keys</h2>
-          <p>Please sign in with your Google account to scan your active projects and review their restriction levels.</p>
-          <button id="btn-empty-sign-in" class="btn btn-primary btn-large">Sign In Now</button>
+          <p>Please sign in with your Google account or provide an access token to scan your active projects and review their restriction levels.</p>
+          <div class="empty-state-actions">
+            <button id="btn-empty-sign-in" class="btn btn-primary btn-large">Sign In with Google</button>
+            <button id="btn-empty-access-token" class="btn btn-secondary btn-large">Paste Access Token</button>
+          </div>
         </div>
 
         <!-- Scrollable Keys list -->
@@ -112,7 +118,7 @@
     <!-- STATUS BAR -->
     <footer class="app-footer">
       <div class="footer-left">
-        <span id="status-notification" class="status-neutral">System Ready. Please sign in to begin.</span>
+        <span id="status-notification" class="status-neutral">System Ready. Please sign in or provide an access token to begin.</span>
       </div>
       <div class="footer-right">
         <span id="copyright">&copy; 2026 API Keys Finder. All rights reserved.</span>
@@ -139,6 +145,45 @@
         </p>
         <div class="modal-footer" style="justify-content: flex-end;">
           <button type="button" id="btn-confirm-errors-modal" class="btn btn-primary">Acknowledge</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACCESS TOKEN MODAL -->
+  <div id="access-token-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>🔑 Google Cloud Access Token</h2>
+        <button id="btn-close-access-token-modal" class="btn-close" title="Close modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-instructions">
+          You can use an Application Default Credentials (ADC) access token generated from the Google Cloud SDK (<span class="code-span">gcloud</span>) as an alternative to signing in.
+        </p>
+
+        <div class="command-card">
+          <div class="command-card-label">Run this command in your terminal to generate an access token:</div>
+          <div class="command-box">
+            <code id="gcloud-command-text">gcloud auth application-default print-access-token</code>
+            <button type="button" id="btn-copy-gcloud-cmd" class="btn btn-secondary btn-sm" title="Copy command to clipboard">
+              <span class="icon">📋</span> <span id="copy-cmd-text">Copy</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 20px;">
+          <label for="input-access-token">Paste Access Token <span class="required">*</span></label>
+          <textarea id="input-access-token" class="token-textarea" placeholder="ya29.example_token..." autocomplete="off" spellcheck="false"></textarea>
+          <span class="form-help">Tokens typically begin with <span class="code-span">ya29.</span> and expire after one hour. Requires authorization via <span class="code-span">gcloud auth application-default login</span>.</span>
+          <div id="token-error-message" class="token-error-text hidden"></div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" id="btn-clear-access-token" class="btn btn-danger-outline hidden">Clear Token</button>
+          <div style="flex-grow: 1;"></div>
+          <button type="button" id="btn-cancel-access-token-modal" class="btn btn-secondary">Cancel</button>
+          <button type="button" id="btn-apply-access-token" class="btn btn-primary">Apply Token</button>
         </div>
       </div>
     </div>

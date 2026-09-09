@@ -5,21 +5,22 @@
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	"image": "mcr.microsoft.com/devcontainers/typescript-node:4-24-trixie",
 	"features": {
-		"ghcr.io/aqua/devcontainer-antigravity-cli/antigravity-cli:1": {}
+		"ghcr.io/aqua/devcontainer-antigravity-cli/antigravity-cli:1": {},
+		"ghcr.io/aqua/devcontainer-gcloud/gcloud:1": {}
+	},
+	"runArgs": [
+		"--mount",
+		"type=bind,source=${env:HOME}/.config/gcloud,target=/home/vscode/.config/gcloud"
+	],
+	"remoteEnv": {
+		"GOOGLE_APPLICATION_CREDENTIALS": "/home/vscode/.config/gcloud/application_default_credentials.json"
 	}
-
-	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
-
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
-
 	// Use 'postCreateCommand' to run commands after the container is created.
 	// "postCreateCommand": "yarn install",
-
 	// Configure tool-specific properties.
 	// "customizations": {},
-
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root"
 }

@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" width="100%" height="100%" style="background:#f8f9fa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <!-- TOOLBAR -->
+  <rect x="0" y="0" width="960" height="60" fill="#ffffff" stroke="#e0e0e0" stroke-width="1"/>
+  
+  <!-- Logo -->
+  <text x="24" y="37" font-size="20">🔑</text>
+  <text x="56" y="37" font-size="16" font-weight="600" fill="#202124">Google API Keys Finder</text>
+  
+  <!-- Search Button (Disabled) -->
+  <rect x="250" y="14" width="150" height="32" rx="4" fill="#f1f3f4" stroke="#dadce0" stroke-width="1"/>
+  <text x="264" y="35" font-size="13" fill="#9aa0a6">🔍 Find All API Keys</text>
+  
+  <!-- Access Token Button -->
+  <rect x="690" y="14" width="120" height="32" rx="4" fill="#ffffff" stroke="#dadce0" stroke-width="1"/>
+  <text x="704" y="35" font-size="13" font-weight="500" fill="#3c4043">🔑 Access Token</text>
+  
+  <!-- Sign In Button -->
+  <rect x="822" y="14" width="114" height="32" rx="4" fill="#1a73e8"/>
+  <text x="834" y="35" font-size="13" font-weight="500" fill="#ffffff">Sign In with Google</text>
+  
+  <!-- TABLE HEADER -->
+  <rect x="24" y="80" width="912" height="40" fill="#f1f3f4" rx="4"/>
+  <text x="40" y="105" font-size="12" font-weight="600" fill="#5f6368">Display Name</text>
+  <text x="210" y="105" font-size="12" font-weight="600" fill="#5f6368">Unique ID (UID)</text>
+  <text x="410" y="105" font-size="12" font-weight="600" fill="#5f6368">Project ID</text>
+  <text x="570" y="105" font-size="12" font-weight="600" fill="#5f6368">Restrictions</text>
+  <text x="700" y="105" font-size="12" font-weight="600" fill="#5f6368">Recommendations</text>
+  
+  <!-- EMPTY STATE CARD -->
+  <rect x="24" y="130" width="912" height="340" fill="#ffffff" stroke="#dadce0" stroke-width="1" rx="8"/>
+  
+  <!-- Center Icon -->
+  <circle cx="480" cy="210" r="32" fill="#e8f0fe"/>
+  <text x="468" y="222" font-size="30">🔓</text>
+  
+  <!-- Heading & Subtitle -->
+  <text x="480" y="275" font-size="20" font-weight="600" fill="#202124" text-anchor="middle">Review Your Google Cloud API Keys</text>
+  <text x="480" y="305" font-size="14" fill="#5f6368" text-anchor="middle">Please sign in with your Google account or provide an access token to scan your active projects</text>
+  <text x="480" y="325" font-size="14" fill="#5f6368" text-anchor="middle">and review their restriction levels.</text>
+  
+  <!-- Action Buttons -->
+  <rect x="300" y="360" width="165" height="42" rx="4" fill="#1a73e8"/>
+  <text x="382" y="386" font-size="14" font-weight="500" fill="#ffffff" text-anchor="middle">Sign In with Google</text>
+  
+  <rect x="485" y="360" width="175" height="42" rx="4" fill="#ffffff" stroke="#dadce0" stroke-width="1"/>
+  <text x="572" y="386" font-size="14" font-weight="500" fill="#3c4043" text-anchor="middle">Paste Access Token</text>
+  
+  <!-- FOOTER / STATUS BAR -->
+  <rect x="0" y="500" width="960" height="40" fill="#ffffff" stroke="#e0e0e0" stroke-width="1"/>
+  <text x="24" y="525" font-size="12" fill="#5f6368">System Ready. Please sign in or provide an access token to begin.</text>
+  <text x="730" y="525" font-size="12" fill="#70757a">© 2026 API Keys Finder.</text>
+  <rect x="870" y="510" width="66" height="20" rx="10" fill="#e8eaed"/>
+  <text x="903" y="524" font-size="11" font-weight="500" fill="#5f6368" text-anchor="middle">None</text>
+</svg>
