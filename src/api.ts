@@ -163,11 +163,9 @@ export async function fetchProjectApiKeys(
     const url = `https://apikeys.googleapis.com/v2/projects/${projectId}/locations/global/keys`;
     const headers: Record<string, string> = {
       'Authorization': `Bearer ${activeToken}`,
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'x-goog-user-project': quotaProjectId || projectId
     };
-    if (quotaProjectId) {
-      headers['x-goog-user-project'] = quotaProjectId;
-    }
 
     const response = await fetch(url, {
       headers,

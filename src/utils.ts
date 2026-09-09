@@ -183,6 +183,14 @@ export async function copyToClipboard(text: string): Promise<boolean> {
 }
 
 /**
+ * Validates whether a given token string matches the Google OAuth2 access token format.
+ */
+export function isValidAccessTokenFormat(token: string): boolean {
+  if (!token || typeof token !== 'string') return false;
+  return token.trim().startsWith('ya29.');
+}
+
+/**
  * Formats an ISO 8601 date string into a clean, human-readable date.
  */
 export function formatDate(isoString?: string): string {
@@ -319,7 +327,7 @@ export function getScannerConfig(): ScannerConfig {
   try {
     if (typeof localStorage !== 'undefined') {
       debug = localStorage.getItem('api_keys_scanner_debug') === 'true';
-      
+
       const storedThreshold = localStorage.getItem('api_keys_scanner_threshold');
       if (storedThreshold !== null) {
         const parsed = parseInt(storedThreshold, 10);

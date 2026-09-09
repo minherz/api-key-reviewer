@@ -4,6 +4,11 @@
       "version": "1.0.2",
       "resolved": "ghcr.io/aqua/devcontainer-antigravity-cli/antigravity-cli@sha256:d7ae5139e62443070175cae13c275ae08efa8d89d6d5d432f96f3f9df51c2030",
       "integrity": "sha256:d7ae5139e62443070175cae13c275ae08efa8d89d6d5d432f96f3f9df51c2030"
+    },
+    "ghcr.io/aqua/devcontainer-gcloud/gcloud:1": {
+      "version": "1.0.2",
+      "resolved": "ghcr.io/aqua/devcontainer-gcloud/gcloud@sha256:5e86779e7980fe244cbfdb389eecbd94679aefe026922e6452139e7003229888",
+      "integrity": "sha256:5e86779e7980fe244cbfdb389eecbd94679aefe026922e6452139e7003229888"
     }
   }
 }

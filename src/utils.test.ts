@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import {
   parseUrlHash,
   hasApiRestrictions,
@@ -22,7 +22,9 @@ import {
   formatDate,
   formatCopyrightVersion,
   parseApiKey,
-  runConcurrentTasks
+  runConcurrentTasks,
+  isValidAccessTokenFormat,
+  copyToClipboard
 } from './utils';
 import { ApiKeyRestrictions } from './types';
 
@@ -223,7 +225,7 @@ describe('utils.ts unit tests', () => {
     it('should parse an unrestricted key correctly with default fallback values', () => {
       const rawKey = { uid: 'key-1', createTime: '2026-07-28T00:00:00Z' };
       const parsed = parseApiKey(rawKey as any, 'proj-abc');
-      
+
       expect(parsed.uid).toBe('key-1');
       expect(parsed.displayName).toBe('Unnamed Key');
       expect(parsed.projectId).toBe('proj-abc');
@@ -275,10 +277,10 @@ describe('utils.ts unit tests', () => {
       await runConcurrentTasks(items, 2, async () => {
         activeTasks++;
         maxSeenConcurrency = Math.max(maxSeenConcurrency, activeTasks);
-        
+
         // Short async delay to guarantee overlap
         await new Promise(resolve => setTimeout(resolve, 20));
-        
+
         activeTasks--;
       });
 
@@ -302,6 +304,75 @@ describe('utils.ts unit tests', () => {
       });
 
       expect(processed).toHaveLength(2);
+    });
+  });
+
+  describe('isValidAccessTokenFormat', () => {
+    it('should return true for valid ya29 access tokens', () => {
+      expect(isValidAccessTokenFormat('ya29.valid_test_token_string')).toBe(true);
+      expect(isValidAccessTokenFormat('  ya29.whitespace_padded  ')).toBe(true);
+    });
+
+    it('should return false for empty or non-ya29 tokens', () => {
+      expect(isValidAccessTokenFormat('')).toBe(false);
+      expect(isValidAccessTokenFormat('   ')).toBe(false);
+      expect(isValidAccessTokenFormat('bearer 12345')).toBe(false);
+      expect(isValidAccessTokenFormat(null as any)).toBe(false);
+      expect(isValidAccessTokenFormat(undefined as any)).toBe(false);
+    });
+  });
+
+  describe('copyToClipboard', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('should use navigator.clipboard.writeText in secure context', async () => {
+      const writeTextMock = vi.fn().mockResolvedValue(undefined);
+      vi.stubGlobal('navigator', { clipboard: { writeText: writeTextMock } });
+      vi.stubGlobal('window', { isSecureContext: true });
+
+      const result = await copyToClipboard('test command');
+      expect(result).toBe(true);
+      expect(writeTextMock).toHaveBeenCalledWith('test command');
+    });
+
+    it('should return false when navigator.clipboard.writeText rejects', async () => {
+      const writeTextMock = vi.fn().mockRejectedValue(new Error('Permission denied'));
+      vi.stubGlobal('navigator', { clipboard: { writeText: writeTextMock } });
+      vi.stubGlobal('window', { isSecureContext: true });
+
+      const result = await copyToClipboard('test command');
+      expect(result).toBe(false);
+    });
+
+    it('should fallback to document.execCommand when clipboard API is unavailable', async () => {
+      const mockTextArea = {
+        style: {} as any,
+        focus: vi.fn(),
+        select: vi.fn(),
+        value: ''
+      };
+      const execCommandMock = vi.fn().mockReturnValue(true);
+      const appendChildMock = vi.fn();
+      const removeChildMock = vi.fn();
+
+      vi.stubGlobal('navigator', {});
+      vi.stubGlobal('window', { isSecureContext: false });
+      vi.stubGlobal('document', {
+        createElement: vi.fn().mockReturnValue(mockTextArea),
+        body: {
+          appendChild: appendChildMock,
+          removeChild: removeChildMock
+        },
+        execCommand: execCommandMock
+      });
+
+      const result = await copyToClipboard('fallback command');
+      expect(result).toBe(true);
+      expect(execCommandMock).toHaveBeenCalledWith('copy');
+      expect(appendChildMock).toHaveBeenCalled();
+      expect(removeChildMock).toHaveBeenCalled();
     });
   });
 });

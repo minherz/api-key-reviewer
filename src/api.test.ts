@@ -166,5 +166,24 @@ describe('api.ts unit tests', () => {
         })
       );
     });
+
+    it('should default x-goog-user-project header to target projectId when quotaProjectId is not provided', async () => {
+      const mockKeys = { keys: [] };
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => mockKeys
+      } as Response);
+      vi.stubGlobal('fetch', mockFetch);
+
+      await fetchProjectApiKeys('target-proj');
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'x-goog-user-project': 'target-proj'
+          })
+        })
+      );
+    });
   });
 });

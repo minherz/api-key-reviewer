@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" width="100%" height="100%" style="background:#f8f9fa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <!-- BACKGROUND APP (DIMMED) -->
+  <rect x="0" y="0" width="960" height="60" fill="#e8eaed"/>
+  <rect x="24" y="80" width="912" height="40" fill="#e0e0e0" rx="4"/>
+  <rect x="24" y="130" width="912" height="340" fill="#ebebeb" rx="8"/>
+  <rect x="0" y="500" width="960" height="40" fill="#e8eaed"/>
+  
+  <!-- MODAL BACKDROP OVERLAY -->
+  <rect x="0" y="0" width="960" height="540" fill="rgba(32, 33, 36, 0.6)"/>
+  
+  <!-- MODAL CARD -->
+  <rect x="230" y="50" width="500" height="430" rx="8" fill="#ffffff" filter="drop-shadow(0 4px 20px rgba(0,0,0,0.25))"/>
+  
+  <!-- MODAL HEADER -->
+  <text x="256" y="86" font-size="18" font-weight="600" fill="#202124">🔑 Google Cloud Access Token</text>
+  <text x="696" y="86" font-size="20" fill="#5f6368" style="cursor:pointer;">×</text>
+  <line x1="230" y1="105" x2="730" y2="105" stroke="#e0e0e0" stroke-width="1"/>
+  
+  <!-- MODAL BODY -->
+  <text x="256" y="132" font-size="13" fill="#3c4043">You can use an Application Default Credentials (ADC) access token</text>
+  <text x="256" y="150" font-size="13" fill="#3c4043">generated from the Google Cloud SDK (gcloud) as an alternative to signing in.</text>
+  
+  <!-- COMMAND CARD -->
+  <rect x="256" y="170" width="448" height="74" rx="6" fill="#f8f9fa" stroke="#dadce0" stroke-width="1"/>
+  <text x="270" y="190" font-size="11" font-weight="500" fill="#5f6368">Run this command in your terminal to generate an access token:</text>
+  
+  <!-- Inner Code Box -->
+  <rect x="270" y="200" width="420" height="34" rx="4" fill="#202124"/>
+  <text x="282" y="222" font-size="12" font-family="SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace" fill="#8ab4f8">gcloud auth application-default print-access-token</text>
+  <rect x="630" y="205" width="52" height="24" rx="3" fill="#3c4043"/>
+  <text x="644" y="221" font-size="11" fill="#ffffff">📋 Copy</text>
+  
+  <!-- FORM GROUP: TOKEN TEXTAREA -->
+  <text x="256" y="272" font-size="13" font-weight="600" fill="#202124">Paste Access Token <tspan fill="#d93025">*</tspan></text>
+  <rect x="256" y="282" width="448" height="90" rx="4" fill="#ffffff" stroke="#dadce0" stroke-width="1"/>
+  <text x="270" y="306" font-size="12" font-family="SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace" fill="#202124">ya29.sample_placeholder_token_for_preview...</text>
+  
+  <text x="256" y="390" font-size="11" fill="#5f6368">Tokens typically begin with <tspan font-family="monospace" fill="#1a73e8">ya29.</tspan> and expire after one hour.</text>
+  <text x="256" y="405" font-size="11" fill="#5f6368">Requires prior authorization via <tspan font-family="monospace" fill="#1a73e8">gcloud auth application-default login</tspan>.</text>
+  
+  <!-- MODAL FOOTER -->
+  <line x1="230" y1="425" x2="730" y2="425" stroke="#e0e0e0" stroke-width="1"/>
+  <rect x="536" y="437" width="80" height="34" rx="4" fill="#ffffff" stroke="#dadce0" stroke-width="1"/>
+  <text x="557" y="459" font-size="13" font-weight="500" fill="#3c4043">Cancel</text>
+  
+  <rect x="626" y="437" width="94" height="34" rx="4" fill="#1a73e8"/>
+  <text x="641" y="459" font-size="13" font-weight="500" fill="#ffffff">Apply Token</text>
+</svg>

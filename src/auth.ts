@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { AuthSource } from './types';
+
 // Declare the external Google Identity Services library global variable
 declare const google: any;
 
@@ -21,8 +23,12 @@ if (!GOOGLE_OAUTH_CLIENT_ID) {
   throw new Error('OAuth Client ID is undefined.');
 }
 
+const STORAGE_KEY_TOKEN = 'gcp_reviewer_token';
+const STORAGE_KEY_SOURCE = 'gcp_reviewer_auth_source';
+
 interface AuthSession {
   token: string | null;
+  source: AuthSource;
 }
 
 // Global In-Memory state for the active session
@@ -43,23 +49,56 @@ const REQUIRED_CLOUD_SCOPE = 'https://www.googleapis.com/auth/cloud-platform.rea
  * This is called exactly once when the application boots up.
  */
 function initializeSession(): AuthSession {
-  const token = sessionStorage.getItem('gcp_reviewer_token');
+  const token = sessionStorage.getItem(STORAGE_KEY_TOKEN);
+  const source = sessionStorage.getItem(STORAGE_KEY_SOURCE) as AuthSource;
 
-  if (token) {
-    activeSession = { token };
+  if (token && (source === 'oauth' || source === 'manual')) {
+    activeSession = { token, source };
+  } else if (token) {
+    activeSession = { token, source: 'oauth' };
   } else {
-    activeSession = { token: null };
+    activeSession = { token: null, source: null };
   }
 
   return activeSession;
 }
 
 /**
- * Retrieves the active OAuth access token.
+ * Retrieves the active access token.
  */
 export function getAuthToken(): string | null {
   let s: AuthSession = (activeSession ??= initializeSession());
   return s.token;
+}
+
+/**
+ * Retrieves the current authentication source ('oauth', 'manual', or null).
+ */
+export function getAuthSource(): AuthSource {
+  let s: AuthSession = (activeSession ??= initializeSession());
+  return s.source;
+}
+
+/**
+ * Sets a user-provided manual access token (e.g. from gcloud auth application-default print-access-token).
+ */
+export function setManualAccessToken(token: string): void {
+  const trimmedToken = token.trim();
+  activeSession = {
+    token: trimmedToken,
+    source: 'manual'
+  };
+  sessionStorage.setItem(STORAGE_KEY_TOKEN, trimmedToken);
+  sessionStorage.setItem(STORAGE_KEY_SOURCE, 'manual');
+}
+
+/**
+ * Clears the user-provided manual access token and resets the session.
+ */
+export function clearManualAccessToken(): void {
+  activeSession = null;
+  sessionStorage.removeItem(STORAGE_KEY_TOKEN);
+  sessionStorage.removeItem(STORAGE_KEY_SOURCE);
 }
 
 /**
@@ -97,9 +136,11 @@ export function login(
 
         // Store session in memory and sessionStorage
         activeSession = {
-          token: tokenResponse.access_token
+          token: tokenResponse.access_token,
+          source: 'oauth'
         };
-        sessionStorage.setItem('gcp_reviewer_token', tokenResponse.access_token);
+        sessionStorage.setItem(STORAGE_KEY_TOKEN, tokenResponse.access_token);
+        sessionStorage.setItem(STORAGE_KEY_SOURCE, 'oauth');
 
         onSuccess();
       },
@@ -122,15 +163,17 @@ export function login(
  */
 export async function logout(): Promise<void> {
   const currentToken = getAuthToken();
+  const currentSource = getAuthSource();
 
   // Wipe active session from memory and storage first
-  activeSession = { token: null };
-  sessionStorage.removeItem('gcp_reviewer_token');
+  activeSession = null;
+  sessionStorage.removeItem(STORAGE_KEY_TOKEN);
+  sessionStorage.removeItem(STORAGE_KEY_SOURCE);
   sessionStorage.removeItem('gcp_reviewer_scope');
   sessionStorage.removeItem('gcp_reviewer_oauth_state');
 
-  // Trigger server-side token revocation if a token was active
-  if (currentToken) {
+  // Trigger server-side token revocation if an OAuth token was active
+  if (currentToken && currentSource === 'oauth') {
     await revokeOAuthToken(currentToken);
   }
 }

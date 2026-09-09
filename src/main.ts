@@ -14,8 +14,8 @@
 
 import { AppState, GcpProject } from './types';
 import { AppError, fetchUserProfile, fetchProjects } from './api';
-import { copyToClipboard, formatDate, formatCopyrightVersion, getRecommendationText, hasApiRestrictions, hasAppRestrictions, logDebug, getScannerConfig } from './utils';
-import { login, logout, getAuthToken } from './auth';
+import { copyToClipboard, formatDate, formatCopyrightVersion, getRecommendationText, hasApiRestrictions, hasAppRestrictions, logDebug, getScannerConfig, isValidAccessTokenFormat } from './utils';
+import { login, logout, getAuthToken, getAuthSource, setManualAccessToken, clearManualAccessToken } from './auth';
 import { executeLinearScan } from './scan-linear';
 import { executeParallelScan } from './scan-parallel';
 
@@ -26,9 +26,10 @@ const CHECK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14
 // Initial Application State
 const state: AppState = {
   user: null,
+  authSource: null,
   projects: [],
   keys: [],
-  statusMessage: 'System Ready. Please sign in to begin.',
+  statusMessage: 'System Ready. Please sign in or provide an access token to begin.',
   isClientError: false,
   searchProgress: {
     status: 'idle',
@@ -45,6 +46,7 @@ let activeSearchController: AbortController | null = null;
 const btnSearchKeys = document.getElementById('btn-search-keys') as HTMLButtonElement;
 const btnCancelSearch = document.getElementById('btn-cancel-search') as HTMLButtonElement;
 const btnShowSignIn = document.getElementById('btn-show-sign-in') as HTMLButtonElement;
+const btnShowAccessToken = document.getElementById('btn-show-access-token') as HTMLButtonElement;
 const btnSignOut = document.getElementById('btn-sign-out') as HTMLButtonElement;
 const userProfileContainer = document.getElementById('user-profile') as HTMLDivElement;
 const userNameDisplay = document.getElementById('user-name') as HTMLSpanElement;
@@ -68,11 +70,21 @@ const btnProgressCancel = document.getElementById('btn-progress-cancel') as HTML
 const statusNotification = document.getElementById('status-notification') as HTMLSpanElement;
 const permissionLevelPill = document.getElementById('permission-level') as HTMLSpanElement;
 
-
 const errorsModal = document.getElementById('errors-modal') as HTMLDivElement;
 const btnCloseErrorsModal = document.getElementById('btn-close-errors-modal') as HTMLButtonElement;
 const btnConfirmErrorsModal = document.getElementById('btn-confirm-errors-modal') as HTMLButtonElement;
 const errorsModalSummary = document.getElementById('errors-modal-summary') as HTMLParagraphElement;
+
+// Access Token Modal elements
+const accessTokenModal = document.getElementById('access-token-modal') as HTMLDivElement;
+const btnCloseAccessTokenModal = document.getElementById('btn-close-access-token-modal') as HTMLButtonElement;
+const btnCancelAccessTokenModal = document.getElementById('btn-cancel-access-token-modal') as HTMLButtonElement;
+const btnApplyAccessToken = document.getElementById('btn-apply-access-token') as HTMLButtonElement;
+const btnClearAccessToken = document.getElementById('btn-clear-access-token') as HTMLButtonElement;
+const inputAccessToken = document.getElementById('input-access-token') as HTMLTextAreaElement;
+const tokenErrorMessage = document.getElementById('token-error-message') as HTMLDivElement;
+const btnCopyGcloudCmd = document.getElementById('btn-copy-gcloud-cmd') as HTMLButtonElement;
+const copyCmdText = document.getElementById('copy-cmd-text') as HTMLSpanElement;
 
 /**
  * Updates the Status Bar UI with the current notification message and style.
@@ -114,31 +126,216 @@ function setErrorsModalVisible(visible: boolean, summaryText: string = '') {
  * Renders the empty state container based on the current authentication state.
  */
 function renderEmptyState() {
-  if (getAuthToken()) {
-    const userDisplay = state.user ? (state.user.name || state.user.email) : 'Authenticated User';
-    emptyStateContainer.innerHTML = `
-      <div class="empty-icon">🔍</div>
-      <h2>Ready to Scan Projects</h2>
-      <p>You are signed in as <strong>${userDisplay}</strong>. Click below to scan your accessible Google Cloud projects and inspect active API keys.</p>
-      <button id="btn-empty-scan" class="btn btn-primary btn-large">Scan API Keys</button>
-    `;
+  emptyStateContainer.innerHTML = `
+    <div class="empty-icon">🔓</div>
+    <h2>Review Your Google Cloud API Keys</h2>
+    <p>Please sign in with your Google account or provide an access token to scan your active projects and review their restriction levels.</p>
+    <div class="empty-state-actions">
+      <button id="btn-empty-sign-in" class="btn btn-primary btn-large">Sign In with Google</button>
+      <button id="btn-empty-access-token" class="btn btn-secondary btn-large">Paste Access Token</button>
+    </div>
+  `;
 
-    const btnEmptyScan = document.getElementById('btn-empty-scan') as HTMLButtonElement;
-    if (btnEmptyScan) {
-      btnEmptyScan.addEventListener('click', executeSearchWorkflow);
+  const btnEmptySignInDynamic = document.getElementById('btn-empty-sign-in') as HTMLButtonElement;
+  if (btnEmptySignInDynamic) {
+    btnEmptySignInDynamic.addEventListener('click', () => redirectToGoogleOAuth());
+  }
+
+  const btnEmptyAccessToken = document.getElementById('btn-empty-access-token') as HTMLButtonElement;
+  if (btnEmptyAccessToken) {
+    btnEmptyAccessToken.addEventListener('click', () => openAccessTokenModal());
+  }
+}
+
+/**
+ * Updates UI elements based on the current authentication state.
+ */
+function updateAuthStateUI() {
+  const token = getAuthToken();
+  const source = getAuthSource();
+  state.authSource = source;
+
+  if (source === 'oauth' && token) {
+    // 1. STANDARD SIGN-IN (OAuth)
+    // The standard sign-in should disable the option for providing an access token until sign out.
+    btnShowSignIn.classList.add('hidden');
+    btnShowSignIn.disabled = false;
+
+    btnShowAccessToken.classList.remove('hidden');
+    btnShowAccessToken.disabled = true;
+    btnShowAccessToken.title = 'Access token option is disabled while signed in with Google';
+
+    userProfileContainer.classList.remove('hidden');
+    btnProfileToggle.disabled = false;
+    btnProfileToggle.classList.remove('disabled');
+    btnProfileToggle.title = 'User Profile Menu';
+
+    // Enable find API keys button
+    btnSearchKeys.disabled = false;
+
+    // Set permission level
+    permissionLevelPill.textContent = 'Read-Only';
+    permissionLevelPill.className = 'permission-pill level-readonly';
+
+    // Clean the panel in the main area
+    emptyStateContainer.classList.add('hidden');
+    keysListContainer.classList.remove('hidden');
+    keysListContainer.innerHTML = '';
+
+  } else if (source === 'manual' && token) {
+    // 2. USER-PROVIDED ACCESS TOKEN
+    // Once the token is provided the sign-in and access token buttons should remain enabled but the profile should be disabled.
+    btnShowSignIn.classList.remove('hidden');
+    btnShowSignIn.disabled = false;
+
+    btnShowAccessToken.classList.remove('hidden');
+    btnShowAccessToken.disabled = false;
+    btnShowAccessToken.title = 'Configure Access Token';
+
+    userProfileContainer.classList.remove('hidden');
+    btnProfileToggle.disabled = true;
+    btnProfileToggle.classList.add('disabled');
+    btnProfileToggle.title = 'Profile is disabled when using a manual access token';
+
+    userNameDisplay.textContent = 'Manual Token';
+    userAvatarDisplay.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23718096"><circle cx="12" cy="12" r="10" stroke="%23A0AEC0" stroke-width="2" fill="none"/><path d="M12 7v5l3 3" stroke="%23718096" stroke-width="2" stroke-linecap="round"/></svg>';
+
+    if (profileDropdown) {
+      profileDropdown.classList.add('hidden');
     }
+
+    // Enable find API keys button
+    btnSearchKeys.disabled = false;
+
+    // Set permission level
+    permissionLevelPill.textContent = 'Read-Only';
+    permissionLevelPill.className = 'permission-pill level-readonly';
+
+    // Clean the panel in the main area
+    emptyStateContainer.classList.add('hidden');
+    keysListContainer.classList.remove('hidden');
+    keysListContainer.innerHTML = '';
+
+    updateStatusBar('Access token configured. Ready to find API keys.');
+
   } else {
-    emptyStateContainer.innerHTML = `
-      <div class="empty-icon">🔓</div>
-      <h2>Review Your Google Cloud API Keys</h2>
-      <p>Please sign in with your Google account to scan your active projects and review their restriction levels.</p>
-      <button id="btn-empty-sign-in" class="btn btn-primary btn-large">Sign In Now</button>
-    `;
+    // 3. LOGGED OUT
+    state.user = null;
+    state.projects = [];
+    state.keys = [];
 
-    const btnEmptySignInDynamic = document.getElementById('btn-empty-sign-in') as HTMLButtonElement;
-    if (btnEmptySignInDynamic) {
-      btnEmptySignInDynamic.addEventListener('click', () => redirectToGoogleOAuth());
+    btnShowSignIn.classList.remove('hidden');
+    btnShowSignIn.disabled = false;
+
+    btnShowAccessToken.classList.remove('hidden');
+    btnShowAccessToken.disabled = false;
+    btnShowAccessToken.title = 'Use Google Access Token';
+
+    userProfileContainer.classList.add('hidden');
+    btnProfileToggle.disabled = false;
+    btnProfileToggle.classList.remove('disabled');
+
+    if (profileDropdown) {
+      profileDropdown.classList.add('hidden');
     }
+
+    btnSearchKeys.disabled = true;
+
+    permissionLevelPill.textContent = 'None';
+    permissionLevelPill.className = 'permission-pill';
+
+    emptyStateContainer.classList.remove('hidden');
+    keysListContainer.classList.add('hidden');
+
+    renderEmptyState();
+    updateStatusBar('System Ready. Please sign in or provide an access token to begin.');
+  }
+}
+
+/**
+ * Opens the Access Token modal.
+ */
+function openAccessTokenModal() {
+  const currentToken = getAuthToken();
+  const currentSource = getAuthSource();
+
+  // Always reset the input field to prevent sensitive tokens from lingering
+  inputAccessToken.value = '';
+
+  if (currentToken && currentSource === 'manual') {
+    btnClearAccessToken.classList.remove('hidden');
+  } else {
+    btnClearAccessToken.classList.add('hidden');
+  }
+
+  tokenErrorMessage.textContent = '';
+  tokenErrorMessage.classList.add('hidden');
+
+  accessTokenModal.classList.remove('hidden');
+  inputAccessToken.focus();
+}
+
+/**
+ * Closes the Access Token modal.
+ */
+function closeAccessTokenModal() {
+  accessTokenModal.classList.add('hidden');
+  inputAccessToken.value = '';
+  tokenErrorMessage.textContent = '';
+  tokenErrorMessage.classList.add('hidden');
+}
+
+/**
+ * Applies the user-provided access token from the modal.
+ */
+function handleApplyAccessToken() {
+  const token = inputAccessToken.value.trim();
+
+  if (!token) {
+    tokenErrorMessage.textContent = 'Please enter a Google access token.';
+    tokenErrorMessage.classList.remove('hidden');
+    inputAccessToken.focus();
+    return;
+  }
+
+  if (!isValidAccessTokenFormat(token)) {
+    tokenErrorMessage.textContent = "Invalid token format. Access tokens must start with 'ya29.'.";
+    tokenErrorMessage.classList.remove('hidden');
+    inputAccessToken.focus();
+    return;
+  }
+
+  setManualAccessToken(token);
+  inputAccessToken.value = '';
+  closeAccessTokenModal();
+  updateAuthStateUI();
+}
+
+/**
+ * Clears the user-provided access token and resets application state.
+ */
+function handleClearAccessToken() {
+  inputAccessToken.value = '';
+  clearManualAccessToken();
+  closeAccessTokenModal();
+  handleSignOutState();
+  updateStatusBar('Access token cleared.');
+}
+
+/**
+ * Copies the gcloud command to clipboard with UI feedback.
+ */
+async function handleCopyGcloudCommand() {
+  const success = await copyToClipboard('gcloud auth application-default print-access-token');
+  if (success) {
+    if (copyCmdText) copyCmdText.textContent = 'Copied!';
+    btnCopyGcloudCmd.classList.add('copied');
+    setTimeout(() => {
+      if (copyCmdText) copyCmdText.textContent = 'Copy';
+      btnCopyGcloudCmd.classList.remove('copied');
+    }, 2000);
+  } else {
+    updateStatusBar('Failed to copy command to clipboard', true, true);
   }
 }
 
@@ -162,22 +359,13 @@ function redirectToGoogleOAuth() {
  */
 async function handleOAuthSession() {
   const token = getAuthToken();
+  const source = getAuthSource();
 
-  if (token) {
-    // Update toolbar profile elements to loading state
-    btnShowSignIn.classList.add('hidden');
-    userProfileContainer.classList.remove('hidden');
+  if (token && source === 'oauth') {
+    updateAuthStateUI();
+
     userNameDisplay.textContent = 'Loading Profile...';
     userAvatarDisplay.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="%23CBD5E0"/><text x="12" y="16" font-size="12" font-family="system-ui" font-weight="bold" fill="%23718096" text-anchor="middle">👤</text></svg>';
-
-    // Enable the "Find Keys" button
-    btnSearchKeys.disabled = false;
-
-    // Set status bar permission pill
-    permissionLevelPill.textContent = 'Read-Only';
-    permissionLevelPill.className = 'permission-pill level-readonly';
-
-    renderEmptyState();
 
     try {
       updateStatusBar('Fetching user profile...');
@@ -196,11 +384,9 @@ async function handleOAuthSession() {
         userAvatarDisplay.src = userProfile.picture;
         userAvatarDisplay.alt = `Signed in as ${userProfile.name}. Click to Sign Out.`;
       } else {
-        // Fallback placeholder icon
         userAvatarDisplay.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="darkgrey"><circle cx="12" cy="12" r="12"/></svg>';
       }
 
-      renderEmptyState();
       updateStatusBar('Successfully authenticated. Ready to scan keys.');
     } catch (err: any) {
       console.error('Error loading user profile:', err);
@@ -213,6 +399,8 @@ async function handleOAuthSession() {
         updateStatusBar(`Authentication warning: ${err.message}`, true, err.source === 'client');
       }
     }
+  } else if (token && source === 'manual') {
+    updateAuthStateUI();
   } else {
     // Not signed in
     handleSignOutState();
@@ -223,27 +411,11 @@ async function handleOAuthSession() {
  * Resets application state variables to signed-out values (internal helper).
  */
 function handleSignOutState() {
+  state.authSource = null;
   state.user = null;
   state.projects = [];
   state.keys = [];
-
-  // Reset UI elements
-  btnShowSignIn.classList.remove('hidden');
-  userProfileContainer.classList.add('hidden');
-  btnSearchKeys.disabled = true;
-
-  if (profileDropdown) {
-    profileDropdown.classList.add('hidden');
-  }
-
-  emptyStateContainer.classList.remove('hidden');
-  keysListContainer.classList.add('hidden');
-
-  permissionLevelPill.textContent = 'None';
-  permissionLevelPill.className = 'permission-pill';
-
-  renderEmptyState();
-  updateStatusBar('Signed out. Please sign in to begin.');
+  updateAuthStateUI();
 }
 
 /**
@@ -423,7 +595,7 @@ function cancelSearch() {
  */
 async function executeSearchWorkflow() {
   if (!getAuthToken()) {
-    updateStatusBar('Error: You must be signed in to search API keys.', true, true);
+    updateStatusBar('Error: You must be signed in or provide an access token to search API keys.', true, true);
     return;
   }
 
@@ -477,7 +649,11 @@ async function executeSearchWorkflow() {
 
     let friendlyMessage = 'Failed to retrieve projects. ';
     if (err instanceof AppError && (err.status === 401 || err.status === 403)) {
-      friendlyMessage += 'Please verify that your Google account has active access to Google Cloud and has granted "Cloud Platform (Read-Only)" scope.';
+      if (getAuthSource() === 'manual') {
+        friendlyMessage = 'Access token is invalid, expired, or lacks permissions. Please generate a fresh token with gcloud auth application-default print-access-token.';
+      } else {
+        friendlyMessage += 'Please verify that your Google account has active access to Google Cloud and has granted "Cloud Platform (Read-Only)" scope.';
+      }
     } else {
       friendlyMessage += err.message || 'Unknown network error.';
     }
@@ -584,12 +760,36 @@ async function executeSearchWorkflow() {
 function setupEventListeners() {
   btnShowSignIn.addEventListener('click', () => redirectToGoogleOAuth());
 
+  // Access token modal triggers and actions
+  btnShowAccessToken.addEventListener('click', openAccessTokenModal);
+  btnCloseAccessTokenModal.addEventListener('click', closeAccessTokenModal);
+  btnCancelAccessTokenModal.addEventListener('click', closeAccessTokenModal);
+  btnApplyAccessToken.addEventListener('click', handleApplyAccessToken);
+  btnClearAccessToken.addEventListener('click', handleClearAccessToken);
+  btnCopyGcloudCmd.addEventListener('click', handleCopyGcloudCommand);
+
+  // Close access token modal when clicking on overlay background
+  accessTokenModal.addEventListener('click', (e) => {
+    if (e.target === accessTokenModal) {
+      closeAccessTokenModal();
+    }
+  });
+
+  // Enter key inside token textarea to apply token (unless shift+enter)
+  inputAccessToken.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleApplyAccessToken();
+    }
+  });
+
   btnCloseErrorsModal.addEventListener('click', () => setErrorsModalVisible(false));
   btnConfirmErrorsModal.addEventListener('click', () => setErrorsModalVisible(false));
 
   // Profile dropdown toggle behaviour
   if (btnProfileToggle) {
     btnProfileToggle.addEventListener('click', (e) => {
+      if (btnProfileToggle.disabled) return;
       e.stopPropagation(); // Prevent document click listener from instantly closing the dropdown
       profileDropdown.classList.toggle('hidden');
     });
